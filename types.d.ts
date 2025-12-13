@@ -12,7 +12,7 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    
+    'ResolveChannel': EventHandler<never, never>
   }
     
 }
