@@ -10,8 +10,8 @@ export const config: EventConfig = {
 }
 
 export const handler = async (eventData: any, {emit, logger, state}: any) => {
-    let jobId: String | undefined
-    let email: String | undefined
+    let jobId: string | undefined
+    let email: string | undefined
 
     try{
         const data = eventData || {};
@@ -25,8 +25,8 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
             throw new Error("YT_API_KEY is not configured");
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "resolving",
         });
@@ -58,7 +58,7 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
 
         if(!channelId){
             logger.error("Failed to resolve channel ID", {channelInput});
-            await state.set(`job_${jobId}`, {
+            await state.set('submissions', jobId, {
                 ...jobData,
                 status: "failed",
                 error: "Failed to resolve channel ID"
@@ -90,8 +90,8 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
             return;
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "resolve_failed",
             updatedAt: new Date().toISOString(),

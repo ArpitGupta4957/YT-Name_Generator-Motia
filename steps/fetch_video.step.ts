@@ -18,8 +18,8 @@ interface Video{
 }
 
 export const handler = async (eventData: any, {emit, logger, state}: any) => {
-    let jobId: String | undefined
-    let email: String | undefined
+    let jobId: string | undefined
+    let email: string | undefined
     
     try{
         const data = eventData || {};
@@ -34,8 +34,8 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
             throw new Error("YT_API_KEY is not configured");
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "fetching videos",
         });
@@ -47,7 +47,7 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
         if(!youtubeData.items || youtubeData.items.length === 0){
             logger.warn("No videos found for channel", {channelId});
 
-            await state.set(`job_${jobId}`, {
+            await state.set('submissions', jobId, {
                 ...jobData,
                 status: "no_videos_found",
                 updatedAt: new Date().toISOString(),
@@ -72,7 +72,7 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
         }));
         logger.info("Fetched videos successfully", {jobId, videoCount: videos.length});
 
-        await state.set(`job_${jobId}`, {
+        await state.set('submissions', jobId, {
                 ...jobData,
                 status: "sucessfully_fetched",
                 updatedAt: new Date().toISOString(),
@@ -95,8 +95,8 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
             return;
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "resolve_failed",
             updatedAt: new Date().toISOString(),

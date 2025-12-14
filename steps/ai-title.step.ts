@@ -11,13 +11,21 @@ export const config: EventConfig = {
 interface ImprovedTitle{
     original: string;
     improved: string;
-    rationale: string;
+    rational: string;
     url: string;
 }
 
+interface Video{
+    videoId: string;
+    title: string;
+    url: string;
+    publishedAt: string;
+    thumbnail: string;
+}
+
 export const handler = async (eventData: any, {emit, logger, state}: any) => {
-    let jobId: String | undefined
-    let email: String | undefined
+    let jobId: string | undefined
+    let email: string | undefined
 
     try{
         const data = eventData || {};
@@ -27,18 +35,18 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
         const videos = data.videos;
 
         logger.info('Processing FetchVideos event', {jobId, videoCount: videos.length});
-        const openAi_Api_Key = process.env.OPENAI_API_KEY;
-        if(!openAi_Api_Key){
-            throw new Error("OPENAI_API_KEY is not configured");
+        const gemini_Api_Key = process.env.GEMINI_API_KEY;
+        if(!gemini_Api_Key){
+            throw new Error("GEMINI_API_KEY is not configured");
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "generating titles for videos",
         });
 
-        const videoTitles = videos.items.map((v: any, idx: number) => `${idx + 1}. "${v.title}"`).join('\n');
+        const videoTitles = videos.map((v: Video, idx: number) => `${idx + 1}. "${v.title}"`).join('\n');
         const prompt = `You are a YouTube title optimization expert. Below are ${videos.length} video titles from the channel "${channelName}".
                 For each title, provide:
                 1. An improved version that is more engaging,
@@ -58,49 +66,57 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
                     {
                 "original": "..",
                 "improved": "...",
-                "rationale": "..."
+                "rational": "..."
                     },
                 ]
                 }`;
         
-        const response = await fetch('https://api.openai.com/v1/chat/completions"', {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${gemini_Api_Key}`, {
             method: "POST",
             headers: {
                 'Content-Type': "application/json",
-                'Authorization': `Bearer ${openAi_Api_Key}`,
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: "You are a youtube SEO and engagement expert who helps creators write better video titles." },
-                    { role: 'user', content: prompt }
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [
+                            { text: prompt }
+                        ]
+                    }
                 ],
-                temperature: 0.7,
-                response_format: {type: 'json_object'},
+                generationConfig: {
+                    temperature: 0.7,
+                    responseMimeType: 'application/json',
+                },
             }),
         });
         if(!response.ok){
             const errorData = await response.json();
-            throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message} || "Unknown error"`);
+            throw new Error(`Gemini API error: ${errorData.error?.message} || "Unknown error"`);
         }
         const aiResponse = await response.json();
-        const aiContent = aiResponse.choices[0].message.content;
-        const parsedContent = JSON.parse(aiContent);
+        const aiContent = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        const cleanedContent = aiContent
+            .replace(/```json/gi, '')
+            .replace(/```/g, '')
+            .trim();
+        const parsedContent = JSON.parse(cleanedContent);
         const improvedTitles: ImprovedTitle[] = parsedContent.titles.map((title: any, idx: number) => ({
             original: title.original,
             improved: title.improved,
-            rationale: title.rationale,
+            rational: title.rational,
             url: videos[idx].url,
         }));
         logger.info("Generated improved titles successfully", {jobId, improvedCount: improvedTitles.length});
-        await state.set(`job_${jobId}`, {
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "titles_generated",
             improvedTitles
         });
 
         await emit({
-            topic: "yt.titles.failed",
+            topic: "yt.titles.generated",
             data: {
                 jobId,
                 channelName,
@@ -110,15 +126,15 @@ export const handler = async (eventData: any, {emit, logger, state}: any) => {
         });
     }
     catch(error: any){
-        logger.error('Error generating videos :', {error: error.message});
+        logger.error('Error generating titles :', {error: error.message});
 
         if(!jobId || !email){
             logger.error("Missing jobId or email in error handling");
             return;
         }
 
-        const jobData = await state.get(`job_${jobId}`);
-        await state.set(`job_${jobId}`, {
+        const jobData = await state.get('submissions', jobId);
+        await state.set('submissions', jobId, {
             ...jobData,
             status: "resolve_failed",
             updatedAt: new Date().toISOString(),

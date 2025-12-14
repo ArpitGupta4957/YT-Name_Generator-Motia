@@ -1,66 +1,70 @@
-import {ApiRouteConfig} from "motia";
+import type { ApiRouteConfig, Handlers } from 'motia'
+import { z } from 'zod'
 
-//step 1: define the config for the API route
 export const config: ApiRouteConfig = {
-    name: "submitChannel",
-    method: "POST",
-    path: "/submit",
-    type: "api",
-    emits: ["yt.submit"],
+  name: 'submitChannel',
+  method: 'POST',
+  path: '/submit',
+  type: 'api',
+  emits: ['yt.submit'],
+  bodySchema: z.object({
+    channel: z.string().min(1, 'Channel is required'),
+    email: z.string().email('Invalid email format'),
+  }),
+
+  responseSchema: {
+    202: z.object({
+      success: z.boolean(),
+      jobId: z.string(),
+      message: z.string(),
+    }),
+    400: z.object({
+      error: z.string(),
+    }),
+    500: z.object({
+      error: z.string(),
+    }),
+  },
 }
 
-interface SubmitRequestBody {
-    channel: string;
-    email: string;
-}
+export const handler: Handlers['submitChannel'] = async (req, { emit, logger, state }) => {
+  try {
+    logger.info('Received submitChannel request', { body: req.body })
+    
+    const { channel, email } = req.body
 
-//step 2: implement the API route handler
-export const handler = async (req: any, {emit, logger, state}: any) => {
-    try{
-        logger.info("Received submitChannel request", {body: req.body});
-        const {channel, email} = req.body as SubmitRequestBody;
-        if(!channel || !email){
-            logger.warn("Invalid request body", {body: req.body});
-            return {
-                status: 400,
-                body: {message: "Invalid request body"}
-            };
-        }
+    const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    
+    await state.set('submissions', jobId, {
+      jobId,
+      channel,
+      email,
+      status: 'submitted',
+      createdAt: new Date().toISOString(),
+    })
+    
+    logger.info('Stored submission in state', { jobId, channel, email })
 
-        // validate
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)){
-            logger.warn("Invalid email format", {email});
-            return {
-                status: 400,
-                body: {message: "Invalid email format"}
-            };
-        }
+    // Line 40 FIX: Include channel and email in emit
+    await emit({
+      topic: 'yt.submit',
+      data: { jobId, channel, email },
+    })
 
-        // Store in state (assuming state has a method to set data)
-        const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-        await state.set(`job_${jobId}`,{
-            jobId,
-            channel,
-            email,
-            status: "submitted",
-            createdAt: new Date().toISOString()
-        });
-        logger.info("Stored submission in state", {jobId, channel, email});
-
-        // Emit event for further processing
-        await emit("yt.submit", {jobId, channel, email});
-        return {
-            status: 202,
-            body: {message: "Submission successful. You will soon receive an email with improved youtube names", jobId}
-        };
-
+    // Line 53 FIX: Return matches responseSchema
+    return {
+      status: 202,
+      body: {
+        success: true,
+        jobId,
+        message: 'Submission successful. You will soon receive an email with improved youtube names',
+      },
     }
-    catch(error: any){
-        logger.error("Error in submitChannel handler:", {error: error.message});
-        return {
-            status: 500,
-            body: {message: "Internal Server Error"}
-        };
+  } catch (error: any) {
+    logger.error('Error in submitChannel handler:', { error: error.message })
+    return {
+      status: 500,
+      body: { error: 'Internal Server Error' },
     }
+  }
 }
