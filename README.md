@@ -1,92 +1,182 @@
-# YT-Copy
+# 🎥 AI-Powered YouTube Title Generator
 
-A Motia tutorial project in TypeScript.
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/AI-Gemini-blueviolet?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Backend-Event--Driven-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Language-TypeScript-yellow?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Workflow-Motia-orange?style=for-the-badge" />
+</p>
 
-## What is Motia?
+<p align="center">
+  <b>Automate YouTube title optimization using AI, event-driven workflows, and clean backend architecture.</b>
+</p>
 
-Motia is an open-source, unified backend framework that eliminates runtime fragmentation by bringing **APIs, background jobs, queueing, streaming, state, workflows, AI agents, observability, scaling, and deployment** into one unified system using a single core primitive, the **Step**.
+---
 
-## Quick Start
+## 🚀 What is this project?
+
+Creating a YouTube title isn’t just writing words —
+it’s about **clicks, SEO, clarity, and curiosity**.
+
+This project is an **AI-powered backend system** that automatically:
+
+* Fetches a YouTube channel’s latest videos
+* Analyzes existing titles
+* Generates **better, high-CTR titles** using AI
+* Explains *why* each new title works
+* Emails the results directly to the user
+
+All built with **real-world backend patterns**, not scripts.
+
+---
+
+## ✨ Key Features
+
+✅ Accepts a YouTube channel name
+✅ Fetches latest videos automatically
+✅ AI-generated, SEO-friendly titles
+✅ Clear rationale for every improvement
+✅ Email-based delivery
+✅ Event-driven & scalable
+✅ Production-ready error handling
+
+---
+
+## 🧠 System Architecture (Visual Overview)
+
+```
+Client Request
+     │
+     ▼
+API Trigger (Motia)
+     │
+     ▼
+YouTube Data Fetch
+     │
+     ▼
+AI Title Generator (Gemini)
+     │
+     ▼
+Email Delivery
+     │
+     ▼
+Job Completed ✅
+```
+
+---
+
+## 🔄 Event-Driven Workflow (Step-by-Step)
+
+```
+yt.request.submitted
+        ↓
+yt.videos.fetched
+        ↓
+yt.titles.generated
+        ↓
+yt.email.sent
+```
+
+Each step:
+
+* Runs independently
+* Can fail safely
+* Can be retried
+* Is observable and scalable
+
+---
+
+## ⚙️ Tech Stack
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Motia-Workflow%20Engine-orange" />
+  <img src="https://img.shields.io/badge/TypeScript-Backend-blue" />
+  <img src="https://img.shields.io/badge/Gemini-AI-green" />
+  <img src="https://img.shields.io/badge/YouTube-Data%20API-red" />
+  <img src="https://img.shields.io/badge/Email-Resend-lightgrey" />
+</p>
+
+* **Motia** – Event-driven workflow engine
+* **TypeScript** – Backend logic
+* **Gemini AI** – Title optimization
+* **YouTube Data API** – Video retrieval
+* **Email Service** – Result delivery
+
+---
+
+## 📁 Project Structure
+
+```
+/events
+ ├── submitRequest.ts
+ ├── fetchVideos.ts
+ ├── generateTitles.ts
+ ├── sendEmail.ts
+ └── errorHandler.ts
+
+/state
+ └── submissions
+
+.env
+README.md
+```
+
+---
+
+## 🛠️ Environment Variables
+
+Create a `.env` file:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+YOUTUBE_API_KEY=your_youtube_api_key
+EMAIL_API_KEY=your_email_service_key
+```
+
+---
+
+## ▶️ Running the Project
 
 ```bash
-# Start the development server
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-This starts the Motia runtime and the **Workbench** - a powerful UI for developing and debugging your workflows. By default, it's available at [`http://localhost:3000`](http://localhost:3000).
+Trigger the workflow by submitting a channel name and email.
 
-1. **Open the Workbench** in your browser at [`http://localhost:3000`](http://localhost:3000)
-2. **Click the `Tutorial`** button on the top right of the workbench
-3. **Complete the `Tutorial`** to get an understanding of the basics of Motia and using the Workbench
+---
 
-## Step Types
+## 🏗️ Why This Project Stands Out
 
-Every Step has a `type` that defines how it triggers:
+✔️ Uses **event-driven backend architecture**
+✔️ AI is integrated **as a system component**, not a gimmick
+✔️ Clean separation of concerns
+✔️ Scalable & extensible design
+✔️ Built like a production service
 
-| Type | When it runs | Use case |
-|------|--------------|----------|
-| **`api`** | HTTP request | REST APIs, webhooks |
-| **`event`** | Event emitted | Background jobs, workflows |
-| **`cron`** | Schedule | Cleanup, reports, reminders |
+This is the kind of architecture used in **real startups and platforms**.
 
-## Development Commands
+---
 
-```bash
-# Start Workbench and development server
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+## 🧪 Future Enhancements
 
-# Start production server (without hot reload)
-npm run start
-# or
-yarn start
-# or
-pnpm start
+* OpenAI ↔ Gemini automatic fallback
+* Retry & backoff strategies
+* Web dashboard for job tracking
+* Support for thumbnails & descriptions
+* Scheduled weekly title suggestions
 
-# Generate TypeScript types from Step configs
-npm run generate-types
-# or
-yarn generate-types
-# or
-pnpm generate-types
+---
 
-# Build project for deployment
-npm run build
-# or
-yarn build
-# or
-pnpm build
-```
+## 🤝 Let’s Connect
 
-## Project Structure
+Interested in:
 
-```
-steps/              # Your Step definitions (or use src/)
-src/                # Shared services and utilities
-motia.config.ts     # Motia configuration
-```
+* AI workflows 🤖
+* Backend architecture 🏗️
+* Building real products 🚀
 
-Steps are auto-discovered from your `steps/` or `src/` directories - no manual registration required.
+Feel free to connect or contribute!
 
-## Tutorial
-
-This project includes an interactive tutorial that will guide you through:
-- Understanding Steps and their types
-- Creating API endpoints
-- Building event-driven workflows
-- Using state management
-- Observing your flows in the Workbench
-
-## Learn More
-
-- [Documentation](https://motia.dev/docs) - Complete guides and API reference
-- [Quick Start Guide](https://motia.dev/docs/getting-started/quick-start) - Detailed getting started tutorial
-- [Core Concepts](https://motia.dev/docs/concepts/overview) - Learn about Steps and Motia architecture
-- [Discord Community](https://discord.gg/motia) - Get help and connect with other developers
+⭐ If you found this project helpful, consider starring the repo!
